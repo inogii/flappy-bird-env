@@ -82,7 +82,7 @@ class FlappyBirdEnv(gym.Env):
         bottom_line_point1 = (pipe_x - 500, ground_y)
         bottom_line_point2 = (pipe_x-50, gap_center_y+20)
         # check if bird is above or below the top line
-        above_top_line = self.is_point_above_line((bird_x, bird_y), top_line_point1, top_line_point2)
+        above_top_line = self.is_point_above_line(bird_x, bird_y, top_line_point1, top_line_point2)
         # check if bird is above or below the bottom line
         above_bottom_line = self.is_point_above_line(bird_x, bird_y, bottom_line_point1, bottom_line_point2)
         # check if bird is over the center gap
