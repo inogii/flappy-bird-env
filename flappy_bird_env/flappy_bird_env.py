@@ -138,7 +138,7 @@ class FlappyBirdEnv(gym.Env):
             "score": self._score
         }
     
-    def is_point_above_line(point_x, point_y, line_point1, line_point2):
+    def is_point_above_line(self, point_x, point_y, line_point1, line_point2):
         """
         Check if a point is above or below the line defined by two points.
         
