@@ -84,7 +84,7 @@ class FlappyBirdEnv(gym.Env):
         # check if bird is above or below the top line
         above_top_line = self.is_point_above_line((bird_x, bird_y), top_line_point1, top_line_point2)
         # check if bird is above or below the bottom line
-        above_bottom_line = self.is_point_above_line((bird_x, bird_y), bottom_line_point1, bottom_line_point2)
+        above_bottom_line = self.is_point_above_line(bird_x, bird_y, bottom_line_point1, bottom_line_point2)
         # check if bird is over the center gap
         in_pipe = bird_x > pipe_x - 64 and bird_x < pipe_x + 100
         pipe_center_threshold = bird_y > gap_center_y - 40 and bird_y < gap_center_y + 40
@@ -138,7 +138,7 @@ class FlappyBirdEnv(gym.Env):
             "score": self._score
         }
     
-    def is_point_above_line(point, line_point1, line_point2):
+    def is_point_above_line(point_x, point_y, line_point1, line_point2):
         """
         Check if a point is above or below the line defined by two points.
         
