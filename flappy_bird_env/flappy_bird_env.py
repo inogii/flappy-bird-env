@@ -148,7 +148,7 @@ class FlappyBirdEnv(gym.Env):
             raise ValueError("Invalid line type")
 
 
-    def is_point_above_line(self, point_x, point_y, line_point1, line_point2):
+    def _is_point_above_line(self, point_x, point_y, line_point1, line_point2):
         """
         Check if a point is above or below the line defined by two points.
         
