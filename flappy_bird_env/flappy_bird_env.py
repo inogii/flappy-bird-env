@@ -77,10 +77,10 @@ class FlappyBirdEnv(gym.Env):
         sky_y = 0
 
         euclidean_distance = np.sqrt((bird_y - gap_center_y)**2 + (0 - gap_center_x+100)**2)
-        top_line_point1 = (pipe_x - 500, sky_y)
-        top_line_point2 = (pipe_x-50, gap_center_y-20)
-        bottom_line_point1 = (pipe_x - 500, ground_y)
-        bottom_line_point2 = (pipe_x-50, gap_center_y+20)
+        top_line_point1 = [pipe_x - 500, sky_y]
+        top_line_point2 = [pipe_x-50, gap_center_y-20]
+        bottom_line_point1 = [pipe_x - 500, ground_y]
+        bottom_line_point2 = [pipe_x-50, gap_center_y+20]
         # check if bird is above or below the top line
         above_top_line = self.is_point_above_line(bird_x, bird_y, top_line_point1, top_line_point2)
         # check if bird is above or below the bottom line
