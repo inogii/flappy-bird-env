@@ -153,10 +153,10 @@ class FlappyBirdEnv(gym.Env):
         b = line_point1[1] - m * line_point1[0]
         
         # Calculate the y value of the line at the x position of the point
-        y_line_at_point_x = m * point[0] + b
+        y_line_at_point_x = m * point_x + b
         
         # If the y value of the point is greater than the line's y value, it's above the line
-        return point[1] > y_line_at_point_x
+        return point_y > y_line_at_point_x
 
     def step(self, action: ActType) -> \
             tuple[ObsType, SupportsFloat, bool, bool, Dict[str, Any]]:
