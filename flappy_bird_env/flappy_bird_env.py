@@ -58,50 +58,16 @@ class FlappyBirdEnv(gym.Env):
 
     @property
     def reward(self) -> SupportsFloat:
-        # if any([not pipe.passed and pipe.x < self._bird.x
-        #         for pipe in self._pipes]):
-        #     return 1
-        # elif not self.terminated:
-        #     return 0.001
-        # else:
-        #     return 0
-        bird_y = self._bird.y
-        bird_x = self._bird.x
-        ground_y = self._base.y
-        pipe = self._pipes[0]
-        pipe_x = pipe.x
-        pipe_height = pipe.height
-        pipe_bottom = pipe.bottom
-        gap_center_y = (pipe_bottom + pipe_height) / 2
-        gap_center_x = pipe_x
-        sky_y = 0
-
-        euclidean_distance = np.sqrt((bird_y - gap_center_y)**2 + (0 - gap_center_x+100)**2)
-        top_line_point1 = [pipe_x - 500, sky_y]
-        top_line_point2 = [pipe_x-50, gap_center_y-20]
-        bottom_line_point1 = [pipe_x - 500, ground_y]
-        bottom_line_point2 = [pipe_x-50, gap_center_y+20]
-        # check if bird is above or below the top line
-        above_top_line = self.is_point_above_line(bird_x, bird_y, top_line_point1, top_line_point2)
-        # check if bird is above or below the bottom line
-        above_bottom_line = self.is_point_above_line(bird_x, bird_y, bottom_line_point1, bottom_line_point2)
-        # check if bird is over the center gap
-        in_pipe = bird_x > pipe_x - 64 and bird_x < pipe_x + 100
-        pipe_center_threshold = bird_y > gap_center_y - 40 and bird_y < gap_center_y + 40
-        
-        if any([not pipe.passed and pipe.x < self._bird.x
-                for pipe in self._pipes]):
+        if self._is_pipe_passed():
             return 1
-        elif not above_top_line or above_bottom_line:
-            reward = 0
-        elif in_pipe and not pipe_center_threshold:
-            reward = 0
+        elif self._is_bird_out_of_bounds():
+            return 0
+        elif self._is_bird_in_pipe_but_off_center():
+            return 0
         elif self.terminated:
-            reward = -1
+            return -1
         else:
-            reward = (1000 - euclidean_distance) / 1000
-        
-        return reward
+            return self._calculate_distance_reward()
 
     @property
     def terminated(self) -> bool:
@@ -138,6 +104,50 @@ class FlappyBirdEnv(gym.Env):
             "score": self._score
         }
     
+    def _is_pipe_passed(self) -> bool:
+        return any(not pipe.passed and pipe.x < self._bird.x for pipe in self._pipes)
+
+    def _is_bird_out_of_bounds(self) -> bool:
+        bird_x, bird_y = self._bird.x, self._bird.y
+        top_line_point1, top_line_point2 = self._get_line_points('top')
+        bottom_line_point1, bottom_line_point2 = self._get_line_points('bottom')
+
+        above_top_line = self._is_point_above_line(bird_x, bird_y, top_line_point1, top_line_point2)
+        above_bottom_line = self._is_point_above_line(bird_x, bird_y, bottom_line_point1, bottom_line_point2)
+
+        return not above_top_line or above_bottom_line
+
+    def _is_bird_in_pipe_but_off_center(self) -> bool:
+        bird_x, bird_y = self._bird.x, self._bird.y
+        pipe = self._pipes[0]
+        gap_center_y = (pipe.bottom + pipe.height) / 2
+
+        in_pipe = pipe.x - 64 < bird_x < pipe.x + 100
+        off_center = not (gap_center_y - 40 < bird_y < gap_center_y + 40)
+
+        return in_pipe and off_center
+
+    def _calculate_distance_reward(self) -> float:
+        bird_y = self._bird.y
+        pipe = self._pipes[0]
+        gap_center_y = (pipe.bottom + pipe.height) / 2
+        euclidean_distance = np.sqrt((bird_y - gap_center_y) ** 2 + (100 - pipe.x) ** 2)
+        return (1000 - euclidean_distance) / 1000
+
+    def _get_line_points(self, line_type: str):
+        pipe = self._pipes[0]
+        sky_y = 0
+        ground_y = self._base.y
+        gap_center_y = (pipe.bottom + pipe.height) / 2
+
+        if line_type == 'top':
+            return [pipe.x - 500, sky_y], [pipe.x - 50, gap_center_y - 20]
+        elif line_type == 'bottom':
+            return [pipe.x - 500, ground_y], [pipe.x - 50, gap_center_y + 20]
+        else:
+            raise ValueError("Invalid line type")
+
+
     def is_point_above_line(self, point_x, point_y, line_point1, line_point2):
         """
         Check if a point is above or below the line defined by two points.
