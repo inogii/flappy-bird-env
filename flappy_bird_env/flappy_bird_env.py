@@ -58,13 +58,50 @@ class FlappyBirdEnv(gym.Env):
 
     @property
     def reward(self) -> SupportsFloat:
+        # if any([not pipe.passed and pipe.x < self._bird.x
+        #         for pipe in self._pipes]):
+        #     return 1
+        # elif not self.terminated:
+        #     return 0.001
+        # else:
+        #     return 0
+        bird_y = self._bird.y
+        bird_x = self._bird.x
+        ground_y = self._base.y
+        pipe = self._pipes[0]
+        pipe_x = pipe.x
+        pipe_height = pipe.height
+        pipe_bottom = pipe.bottom
+        gap_center_y = (pipe_bottom + pipe_height) / 2
+        gap_center_x = pipe_x
+        sky_y = 0
+
+        euclidean_distance = np.sqrt((bird_y - gap_center_y)**2 + (0 - gap_center_x+100)**2)
+        top_line_point1 = (pipe_x - 500, sky_y)
+        top_line_point2 = (pipe_x-50, gap_center_y-20)
+        bottom_line_point1 = (pipe_x - 500, ground_y)
+        bottom_line_point2 = (pipe_x-50, gap_center_y+20)
+        # check if bird is above or below the top line
+        above_top_line = self.is_point_above_line((bird_x, bird_y), top_line_point1, top_line_point2)
+        # check if bird is above or below the bottom line
+        above_bottom_line = self.is_point_above_line((bird_x, bird_y), bottom_line_point1, bottom_line_point2)
+        # check if bird is over the center gap
+        in_pipe = bird_x > pipe_x - 64 and bird_x < pipe_x + 100
+        pipe_center_threshold = bird_y > gap_center_y - 40 and bird_y < gap_center_y + 40
+        
         if any([not pipe.passed and pipe.x < self._bird.x
                 for pipe in self._pipes]):
             return 1
-        elif not self.terminated:
-            return 0.001
+        elif not above_top_line or above_bottom_line:
+            reward = 0
+        elif in_pipe and not pipe_center_threshold:
+            reward = 0
+        elif self.terminated:
+            reward = -1
         else:
-            return 0
+            reward = (1000 - euclidean_distance) / 1000
+        
+        return reward
 
     @property
     def terminated(self) -> bool:
@@ -100,6 +137,26 @@ class FlappyBirdEnv(gym.Env):
             "last_action": self._last_action,
             "score": self._score
         }
+    
+    def is_point_above_line(point, line_point1, line_point2):
+        """
+        Check if a point is above or below the line defined by two points.
+        
+        :param point: Tuple (x, y) for the point to check.
+        :param line_point1: Tuple (x, y) for the first point on the line.
+        :param line_point2: Tuple (x, y) for the second point on the line.
+        :return: True if the point is above the line, False if below.
+        """
+        # Calculate the slope (m)
+        m = (line_point2[1] - line_point1[1]) / (line_point2[0] - line_point1[0])
+        # Calculate the y-intercept (b)
+        b = line_point1[1] - m * line_point1[0]
+        
+        # Calculate the y value of the line at the x position of the point
+        y_line_at_point_x = m * point[0] + b
+        
+        # If the y value of the point is greater than the line's y value, it's above the line
+        return point[1] > y_line_at_point_x
 
     def step(self, action: ActType) -> \
             tuple[ObsType, SupportsFloat, bool, bool, Dict[str, Any]]:
