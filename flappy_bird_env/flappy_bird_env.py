@@ -42,7 +42,7 @@ class FlappyBirdEnv(gym.Env):
         self._pipes = None
         self._base = None
         self._bird = None
-
+        self._old_distance = np.inf
         self._surface = None
         self._clock = None
         if self.render_mode == "human":
@@ -58,16 +58,18 @@ class FlappyBirdEnv(gym.Env):
 
     @property
     def reward(self) -> SupportsFloat:
+
+        new_distance = self._calculate_distance()
+
         if self._is_pipe_passed():
             return 1
-        elif self._is_bird_out_of_bounds():
-            return 0
-        elif self._is_bird_in_pipe_but_off_center():
-            return 0
         elif self.terminated:
             return -1
-        else:
+        elif new_distance <= self._old_distance:
+            self._old_distance = new_distance
             return self._calculate_distance_reward()
+        else:
+            return 0
 
     @property
     def terminated(self) -> bool:
@@ -127,12 +129,21 @@ class FlappyBirdEnv(gym.Env):
 
         return in_pipe and off_center
 
-    def _calculate_distance_reward(self) -> float:
+    def _calculate_distance(self) -> float:
         bird_y = self._bird.y
+        bird_x = self._bird.x
         pipe = self._pipes[0]
         gap_center_y = (pipe.bottom + pipe.height) / 2
-        euclidean_distance = np.sqrt((bird_y - gap_center_y) ** 2 + (100 - pipe.x) ** 2)
-        return (1000 - euclidean_distance) / 1000
+        euclidean_distance = np.sqrt((bird_y - gap_center_y) ** 2 + (bird_x - pipe.x+150) ** 2)
+        return euclidean_distance
+
+    def _calculate_distance_reward(self) -> float:
+        bird_y = self._bird.y
+        bird_x = self._bird.x
+        pipe = self._pipes[0]
+        gap_center_y = (pipe.bottom + pipe.height) / 2
+        euclidean_distance = np.sqrt((bird_y - gap_center_y) ** 2 + (bird_x - pipe.x+150) ** 2)
+        return (410 - euclidean_distance) / 410
 
     def _get_line_points(self, line_type: str):
         pipe = self._pipes[0]
