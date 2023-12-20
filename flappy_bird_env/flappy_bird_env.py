@@ -65,7 +65,7 @@ class FlappyBirdEnv(gym.Env):
             return 1
         elif self.terminated:
             self._old_distance = np.inf
-	    return -1
+            return -1
         elif new_distance <= self._old_distance:
             self._old_distance = new_distance
             return self._calculate_distance_reward()
